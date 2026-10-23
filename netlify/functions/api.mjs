@@ -8,16 +8,16 @@ export const config = { path: "/api/*" };
 
 // Kho dữ liệu: ưu tiên đọc/ghi "strong"; nếu môi trường không hỗ trợ thì tự lùi về chế độ thường.
 // Nếu Netlify không tự cấu hình Blobs, đặt biến môi trường BLOBS_SITE_ID và BLOBS_TOKEN (xem README).
-let strong = true, curStore = null;
+let strong = true;
 const mkStore = () => getStore({
   name: "bang-uy-thac",
   ...(process.env.BLOBS_SITE_ID && process.env.BLOBS_TOKEN ? { siteID: process.env.BLOBS_SITE_ID, token: process.env.BLOBS_TOKEN } : {}),
   ...(strong ? { consistency: "strong" } : {})
 });
 const run = async fn => {
-  try { return await fn(curStore || (curStore = mkStore())); }
+  try { return await fn(mkStore()); }
   catch (e) {
-    if (strong && /consistency|uncached/i.test(String(e && e.message))) { strong = false; curStore = mkStore(); return fn(curStore); }
+    if (strong && /consistency|uncached/i.test(String(e && e.message))) { strong = false; return fn(mkStore()); }
     throw e;
   }
 };
